@@ -1,0 +1,19 @@
+CREATE TABLE `category` (
+    `id` INTEGER PRIMARY KEY AUTOINCREMENT,
+    `name` VARCHAR(128) NULL
+);
+CREATE TABLE `city` (
+    `id` INTEGER PRIMARY KEY AUTOINCREMENT,
+    `name` VARCHAR(128) NULL
+);
+CREATE TABLE `warehouse` (
+    `id` INTEGER PRIMARY KEY AUTOINCREMENT,
+    `name` VARCHAR(128) NULL,
+    `city_id` INTEGER NOT NULL
+);
+CREATE TABLE `product` (
+    `id` INTEGER PRIMARY KEY AUTOINCREMENT,
+    `name` VARCHAR(128) NULL,
+    `category_id` INTEGER NOT NULL,
+    `warehouse_id` INTEGER NOT NULL
+);

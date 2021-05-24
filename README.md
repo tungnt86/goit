@@ -1,6 +1,5 @@
 # GOIT - A Golang integration test kit
-Integration test is very important to make sure repository layer works smoothly with database and do its business jobs correctly. However, integration test usually comes with high cose of development and slow running if you do not have a smart fixture strategy and take advantages of Go parallel test feature. A good integration test kit will encourage
-your team to write more quality and maintainable tests with a low development cost.
+Integration test is super important to make sure repository layer works smoothly with database and does its business jobs correctly. However, integration test usually comes with high cost of development and slow running if you do not have a smart fixture strategy and take advantages of Go parallel test feature. A good integration test kit will encourage your team to write more high quality and maintainable tests with a low development cost.
 
 In a nutshell, what benefit this library would offer to you:
 

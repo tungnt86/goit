@@ -62,15 +62,14 @@ Last step, let's see how easy to write tests the following example code.
         Because product.AdidasBallProductFixture already takes care of them inside it.
         */
         product.NewAdidasBallProductFixture(s.DB()).Build()
+        /* Get the created fixture from a fixture store easily */
+        adidasBall := s.GetFixture(product.AdidasBallFixtureReference)
         
         /* Define you expectation */
         expectedResult := *model.Product{ID: 1, Name: "Adidas ball", CategoryID: 1, WarehouseID: 1}
         
-        /* Get the created fixture from a fixture store easily */
-        adidasBall := s.GetFixture(product.AdidasBallFixtureReference)
-        
         /* Call your function
-        actualResult, err := s.productRepo.GetByID(adidasBall.(*model.Product).ID)
+        actualResult, err := s.productRepo.GetByID(adidasBall.GetID())
         
         /* Test your result */
         s.NoError(err)

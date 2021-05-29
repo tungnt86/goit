@@ -23,14 +23,14 @@ type BaseFixture struct {
 	db           *sql.DB
 	reference    string
 	dependencies []FoxBuilder
-	fixtureStore FixtureStore
+	foxStore     FoxStore
 }
 
 func NewBaseFixture(db *sql.DB) *BaseFixture {
 	return &BaseFixture{
-		testID:       DefaultTestID,
-		db:           db,
-		fixtureStore: NewFixtureStore(),
+		testID:   DefaultTestID,
+		db:       db,
+		foxStore: NewFixtureStore(),
 	}
 }
 
@@ -73,7 +73,11 @@ func (b *BaseFixture) Build(testID ...string) error {
 	if len(testID) > 0 {
 		b.testID = testID[0]
 	}
-	err := b.BuildDependencies()
+	_, err := b.GetFixture(b.reference)
+	if err == nil {
+		return nil
+	}
+	err = b.BuildDependencies()
 	if nil != err {
 		return err
 	}
@@ -82,11 +86,11 @@ func (b *BaseFixture) Build(testID ...string) error {
 		return err
 	}
 
-	return b.fixtureStore.Set(b.testID, b.reference, fixture)
+	return b.foxStore.Set(b.testID, b.reference, fixture)
 }
 
 func (b *BaseFixture) GetFixture(reference string) (interface{}, error) {
-	fixture, err := b.fixtureStore.Get(b.testID, reference)
+	fixture, err := b.foxStore.Get(b.testID, reference)
 	if err != nil {
 		return nil, err
 	}

@@ -26,8 +26,7 @@ func (i *ITsqlite) BeforeTest(suiteName, testName string) {
 }
 
 func (i *ITsqlite) initSQLiteDatabase(suiteName, testName string) (*sql.DB, error) {
-	rootDir := i.rootDirectory()
-	initStmt, err := ioutil.ReadFile(rootDir + "/" + i.config.SQLiteDatabaseInitFile)
+	initStmt, err := ioutil.ReadFile(i.rootDirectory() + "/" + i.config.SQLiteDatabaseInitFile)
 	if err != nil {
 		return nil, err
 	}
@@ -60,5 +59,5 @@ func (i *ITsqlite) TearDownSuite() {
 }
 
 func (i *ITsqlite) sqliteDatabaseSubDir(suiteName string) string {
-	return i.rootDirectory() + "/" + i.config.SQLiteDatabasePath + "/" + suiteName
+	return i.config.SQLiteDatabasePath + "/" + suiteName
 }

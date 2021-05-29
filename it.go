@@ -19,9 +19,9 @@ var (
 
 type it struct {
 	suite.Suite
-	config       Config
-	connections  map[string]*sql.DB
-	fixtureStore fixture.FixtureStore
+	config      Config
+	connections map[string]*sql.DB
+	foxStore    fixture.FoxStore
 }
 
 func (i *it) DB() *sql.DB {
@@ -76,11 +76,11 @@ func (i *it) TearDownSuite() {
 }
 
 func (i *it) TearDownTest() {
-	i.fixtureStore.Reset()
+	i.foxStore.Reset()
 }
 
 func (i *it) initFixtureStore() {
-	i.fixtureStore = fixture.NewFixtureStore()
+	i.foxStore = fixture.NewFixtureStore()
 }
 
 func (i *it) GetFixture(reference string, testID ...string) (interface{}, error) {
@@ -88,12 +88,7 @@ func (i *it) GetFixture(reference string, testID ...string) (interface{}, error)
 	if len(testID) > 0 {
 		id = testID[0]
 	}
-	fixture, err := i.fixtureStore.Get(id, reference)
-	if err != nil {
-		return nil, err
-	}
-
-	return fixture, nil
+	return i.foxStore.Get(id, reference)
 }
 
 func (i *it) rootDirectory() string {

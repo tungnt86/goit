@@ -27,7 +27,7 @@ func NewTennisBallProduct(db *sql.DB) *tennisBallProduct {
 	return tennisBallFixture
 }
 
-func (s *tennisBallProduct) Create() (interface{}, error) {
+func (s *tennisBallProduct) Create() (fixture.ModelWithID, error) {
 	sportCategory, err := s.GetFixture(category.SportCategoryReference)
 	if err != nil {
 		return nil, err

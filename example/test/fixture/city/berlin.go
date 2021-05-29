@@ -22,6 +22,6 @@ func NewBerlinCity(db *sql.DB) *berlinCity {
 	return cityFixture
 }
 
-func (s *berlinCity) Create() (interface{}, error) {
+func (s *berlinCity) Create() (fixture.ModelWithID, error) {
 	return newCityFixtureFactory(s.DB()).createCity("Smartphone")
 }

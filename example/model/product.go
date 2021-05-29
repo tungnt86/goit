@@ -1,7 +1,7 @@
 package model
 
 type Product struct {
-	ID          int64
+	BaseModel
 	Name        string
 	CategoryID  int64
 	WarehouseID int64

@@ -1,7 +1,7 @@
 package model
 
 type Warehouse struct {
-	ID int64
-	Name string
+	BaseModel
+	Name   string
 	CityID int64
 }

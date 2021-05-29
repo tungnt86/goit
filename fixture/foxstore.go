@@ -12,40 +12,40 @@ const (
 var (
 	once     sync.Once
 	mutex    = &sync.Mutex{}
-	instance *fixtureStore
+	instance *foxStore
 )
 
-type FixtureStore interface {
+type FoxStore interface {
 	HasReference(runID, reference string) bool
-	Set(runID, reference string, fixture interface{}) error
-	Get(runID, reference string) (interface{}, error)
+	Set(runID, reference string, fixture ModelWithID) error
+	Get(runID, reference string) (ModelWithID, error)
 	Reset()
 }
 
-type fixtureStore struct {
-	fixtures map[string]map[string]interface{}
+type foxStore struct {
+	fixtures map[string]map[string]ModelWithID
 }
 
-func NewFixtureStore() *fixtureStore {
+func NewFixtureStore() *foxStore {
 	once.Do(func() {
-		instance = &fixtureStore{
-			fixtures: make(map[string]map[string]interface{}),
+		instance = &foxStore{
+			fixtures: make(map[string]map[string]ModelWithID),
 		}
 	})
 
 	return instance
 }
 
-func (s *fixtureStore) initStoreForTest(testID string) {
+func (s *foxStore) initStoreForTest(testID string) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	if _, ok := s.fixtures[testID]; ok {
 		return
 	}
-	s.fixtures[testID] = make(map[string]interface{})
+	s.fixtures[testID] = make(map[string]ModelWithID)
 }
 
-func (s *fixtureStore) Set(testID, reference string, fixture interface{}) error {
+func (s *foxStore) Set(testID, reference string, fixture ModelWithID) error {
 	if _, ok := s.fixtures[testID]; !ok {
 		s.initStoreForTest(testID)
 	}
@@ -57,7 +57,7 @@ func (s *fixtureStore) Set(testID, reference string, fixture interface{}) error 
 	return nil
 }
 
-func (s *fixtureStore) Get(testID, reference string) (interface{}, error) {
+func (s *foxStore) Get(testID, reference string) (ModelWithID, error) {
 	if _, ok := s.fixtures[testID]; !ok {
 		return nil, fmt.Errorf(`Reference "%s" is not set in test "%s" yet`, reference, testID)
 	}
@@ -69,7 +69,7 @@ func (s *fixtureStore) Get(testID, reference string) (interface{}, error) {
 	return fixture, nil
 }
 
-func (s *fixtureStore) HasReference(testID, reference string) bool {
+func (s *foxStore) HasReference(testID, reference string) bool {
 	if _, ok := s.fixtures[testID]; !ok {
 		return false
 	}
@@ -77,8 +77,8 @@ func (s *fixtureStore) HasReference(testID, reference string) bool {
 	return ok
 }
 
-func (s *fixtureStore) Reset() {
+func (s *foxStore) Reset() {
 	mutex.Lock()
 	defer mutex.Unlock()
-	s.fixtures = make(map[string]map[string]interface{})
+	s.fixtures = make(map[string]map[string]ModelWithID)
 }

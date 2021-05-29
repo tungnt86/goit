@@ -114,7 +114,7 @@ func (p *provider) SQLiteDB(dbSubDir, dbFile string, initStmt string) (*sql.DB, 
 
 func (p *provider) createDirIfNeed(dir string) error {
 	if _, err := os.Stat(dir); err != nil && os.IsNotExist(err) {
-		return os.Mkdir(dir, 0700)
+		return os.MkdirAll(dir, 0700)
 	}
 
 	return nil

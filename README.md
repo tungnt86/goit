@@ -26,7 +26,7 @@ In particular, we can create a two nested product fixtures as bellow:
     . +++++++++++++++++++                     .
     . + Mitte warehouse +                     .
     . + *************** +                     .
-    . + * Berlin City * +  """""""""""""""""" .
+    . + * Berlin city * +  """""""""""""""""" .
     . + *************** +  " Sport category " .
     . +++++++++++++++++++  """""""""""""""""" .
     ...........................................  
@@ -37,13 +37,14 @@ In particular, we can create a two nested product fixtures as bellow:
     . +++++++++++++++++++                      .
     . + Mitte warehouse +                      .
     . + *************** +                      .
-    . + * Berlin City * +  ~~~~~~~~~~~~~~~~~~~ .
+    . + * Berlin city * +  ~~~~~~~~~~~~~~~~~~~ .
     . + *************** +  ~ Hitech category ~ .
     . +++++++++++++++++++  ~~~~~~~~~~~~~~~~~~~ .
     ............................................ 
 
 Definitely, we also have to create fixture structs for `Sport category`, `Hitech category`, `Berlin city` and `Mitte warehouse`.
 But to keep it simple for now, we just assume that they are created already and we just simply reuse them as nested fixtures in `product.AdidasBallProductFixture` and `product.MacbookProProductFixture` structs.
+Obviously, `Berlin city` and `Mitte warehouse` are reused in the both product fixtures. If you check the example code, you will see what you need to do is just declare that `product.AdidasBallProductFixture` depends on `Mitte warehouse` and no more no less, what a simple and logical way.
 
 Last step, let's see how easy to write tests the following example code.
 
@@ -83,6 +84,8 @@ Basically we have two ways to run integration tests in parallel.
 2. Transaction based SQL, each test case starts a transaction and rollback the database when the test is done.
 
 This tool already takes care all for you and you do not need to do anything else to implement parallel tests.
+Both solutions are implemented in two separate files itsql.go and itsqlite.go following abstract factory pattern.
+Just extend and enjoy them.
 
 ## Example code
 More detail of how to use this tool kit is provided in example folder. You just simply clone this kit and run `go test ./example/repository` on a machine already have Go installed without database or any other requirements.

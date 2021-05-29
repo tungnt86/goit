@@ -25,7 +25,7 @@ func NewBerlinWarehouse(db *sql.DB) *berlinWarehouse {
 	return warehouseFixture
 }
 
-func (s *berlinWarehouse) Create() (interface{}, error) {
+func (s *berlinWarehouse) Create() (fixture.ModelWithID, error) {
 	berlinCity, err := s.GetFixture(city.BerlinCityReference)
 	if err != nil {
 		return nil, err

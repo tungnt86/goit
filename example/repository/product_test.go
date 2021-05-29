@@ -30,10 +30,10 @@ func (s *ProductRepoTestSuite) TestGetOne_NoError() {
 	berlinWarehouse, err := s.GetFixture(warehouse.BerlinWarehouseReference)
 	s.NoError(err)
 	expectedResult := &model.Product{
-		ID:          1,
+		BaseModel:   model.BaseModel{ID: 1},
 		Name:        "Tennis ball",
-		CategoryID:  sportCategory.(*model.Category).ID,
-		WarehouseID: berlinWarehouse.(*model.Warehouse).ID,
+		CategoryID:  sportCategory.GetID(),
+		WarehouseID: berlinWarehouse.GetID(),
 	}
 	actualResult, err := s.repo.GetOne(context.Background(), 1)
 	s.NoError(err)
@@ -51,22 +51,22 @@ func (s *ProductRepoTestSuite) TestGetOneInParallel_NoError() {
 			fixture: func(testID string, db *sql.DB) *model.Product {
 				err := product.NewIphoneProduct(db).Build(testID)
 				s.NoError(err)
-				product, err := s.GetFixture(product.IphoneProductReference, testID)
+				iphoneProduct, err := s.GetFixture(product.IphoneProductReference, testID)
 				s.NoError(err)
-				return product.(*model.Product)
+				return iphoneProduct.(*model.Product)
 			},
 			want: func(testID string) *model.Product {
-				product, err := s.GetFixture(product.IphoneProductReference, testID)
+				iphoneProduct, err := s.GetFixture(product.IphoneProductReference, testID)
 				s.NoError(err)
 				hitechCategory, err := s.GetFixture(category.HiTechCategoryReference, testID)
 				s.NoError(err)
 				berlinWarehouse, err := s.GetFixture(warehouse.BerlinWarehouseReference, testID)
 				s.NoError(err)
 				return &model.Product{
-					ID:          product.(*model.Product).ID,
+					BaseModel:   model.BaseModel{ID: iphoneProduct.GetID()},
 					Name:        "Iphone 10",
-					CategoryID:  hitechCategory.(*model.Category).ID,
-					WarehouseID: berlinWarehouse.(*model.Warehouse).ID,
+					CategoryID:  hitechCategory.GetID(),
+					WarehouseID: berlinWarehouse.GetID(),
 				}
 			},
 		},
@@ -80,17 +80,17 @@ func (s *ProductRepoTestSuite) TestGetOneInParallel_NoError() {
 				return product.(*model.Product)
 			},
 			want: func(testID string) *model.Product {
-				product, err := s.GetFixture(product.TennisBallProductReference, testID)
+				tennisProduct, err := s.GetFixture(product.TennisBallProductReference, testID)
 				s.NoError(err)
 				sportCategory, err := s.GetFixture(category.SportCategoryReference, testID)
 				s.NoError(err)
 				berlinWarehouse, err := s.GetFixture(warehouse.BerlinWarehouseReference, testID)
 				s.NoError(err)
 				return &model.Product{
-					ID:          product.(*model.Product).ID,
+					BaseModel:   model.BaseModel{ID: tennisProduct.GetID()},
 					Name:        "Tennis ball",
-					CategoryID:  sportCategory.(*model.Category).ID,
-					WarehouseID: berlinWarehouse.(*model.Warehouse).ID,
+					CategoryID:  sportCategory.GetID(),
+					WarehouseID: berlinWarehouse.GetID(),
 				}
 			},
 		},

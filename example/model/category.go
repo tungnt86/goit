@@ -1,6 +1,6 @@
 package model
 
 type Category struct {
-	ID int64
+	BaseModel
 	Name string
 }

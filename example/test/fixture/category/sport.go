@@ -22,6 +22,6 @@ func NewSportCategory(db *sql.DB) *sportCategory {
 	return categoryFixture
 }
 
-func (s *sportCategory) Create() (interface{}, error) {
+func (s *sportCategory) Create() (fixture.ModelWithID, error) {
 	return newCategoryFixtureFactory(s.DB()).createCategory("Tennis")
 }

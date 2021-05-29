@@ -36,7 +36,7 @@ func (r *productRepo) GetOne(ctx context.Context, id int64) (*model.Product, err
 	}
 
 	return &model.Product{
-		ID:          id,
+		BaseModel:   model.BaseModel{ID: id},
 		Name:        name,
 		CategoryID:  categoryID,
 		WarehouseID: warehouseID,

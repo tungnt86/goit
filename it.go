@@ -83,7 +83,7 @@ func (i *it) initFixtureStore() {
 	i.foxStore = fixture.NewFixtureStore()
 }
 
-func (i *it) GetFixture(reference string, testID ...string) (interface{}, error) {
+func (i *it) GetFixture(reference string, testID ...string) (fixture.ModelWithID, error) {
 	id := fixture.DefaultTestID
 	if len(testID) > 0 {
 		id = testID[0]

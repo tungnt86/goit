@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/tungnt/goit/example/model"
+	"github.com/tungnt/goit/fixture"
 )
 
 type warehouseFixtureFactory struct {
@@ -14,10 +15,10 @@ func newWarehouseFixtureFactory(db *sql.DB) *warehouseFixtureFactory {
 	return &warehouseFixtureFactory{db: db}
 }
 
-func (f *warehouseFixtureFactory) createWarehouse(name string, city interface{}) (*model.Warehouse, error) {
+func (f *warehouseFixtureFactory) createWarehouse(name string, city fixture.ModelWithID) (*model.Warehouse, error) {
 	warehouse := model.Warehouse{
 		Name:   name,
-		CityID: city.(*model.City).ID,
+		CityID: city.GetID(),
 	}
 	stmt, err := f.db.Prepare("INSERT INTO warehouse(name, city_id) values(?, ?)")
 	if err != nil {

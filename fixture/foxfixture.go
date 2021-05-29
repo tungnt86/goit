@@ -9,7 +9,7 @@ type FoxFixture interface {
 	DB() *sql.DB
 	Reference() (string, error)
 	SetReference(reference string)
-	Create() (interface{}, error)
+	Create() (ModelWithID, error)
 }
 
 type FoxBuilder interface {
@@ -44,7 +44,7 @@ func (b *BaseFixture) DB() *sql.DB {
 
 func (b *BaseFixture) Reference() (string, error) {
 	if "" == b.reference {
-		return "", errors.New("Reference of this fixture is not defined yet.")
+		return "", errors.New("reference of this fixture is not defined yet")
 	}
 
 	return b.reference, nil
@@ -89,7 +89,7 @@ func (b *BaseFixture) Build(testID ...string) error {
 	return b.foxStore.Set(b.testID, b.reference, fixture)
 }
 
-func (b *BaseFixture) GetFixture(reference string) (interface{}, error) {
+func (b *BaseFixture) GetFixture(reference string) (ModelWithID, error) {
 	fixture, err := b.foxStore.Get(b.testID, reference)
 	if err != nil {
 		return nil, err

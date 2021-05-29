@@ -27,7 +27,7 @@ func NewIphoneProduct(db *sql.DB) *IphoneProduct {
 	return iphoneProduct
 }
 
-func (s *IphoneProduct) Create() (interface{}, error) {
+func (s *IphoneProduct) Create() (fixture.ModelWithID, error) {
 	hiTechCategory, err := s.GetFixture(category.HiTechCategoryReference)
 	if err != nil {
 		return nil, err

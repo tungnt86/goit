@@ -22,6 +22,6 @@ func NewHiTechCategory(db *sql.DB) *hiTechCategory {
 	return categoryFixture
 }
 
-func (s *hiTechCategory) Create() (interface{}, error) {
+func (s *hiTechCategory) Create() (fixture.ModelWithID, error) {
 	return newCategoryFixtureFactory(s.DB()).createCategory("Smartphone")
 }

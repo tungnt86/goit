@@ -17,8 +17,8 @@ type ProductRepoTestSuite struct {
 	repo *productRepo
 }
 
-func (s *ProductRepoTestSuite) BeforeTest(suiteName, testName string) {
-	s.ITsqlite.BeforeTest(suiteName, testName)
+func (s *ProductRepoTestSuite) SetupTest() {
+	s.ITsqlite.SetupTest()
 	s.repo = &productRepo{db: s.DB()}
 }
 
@@ -41,6 +41,10 @@ func (s *ProductRepoTestSuite) TestGetOne_NoError() {
 }
 
 func (s *ProductRepoTestSuite) TestGetOneInParallel_NoError() {
+	// A lint rule requires to define parallel test here
+	s.T().Parallel()
+	// Call SetupTest here to init the test if the test is run in parallel.
+	s.SetupTest()
 	tests := []struct {
 		name    string
 		fixture func(testID string, db *sql.DB) *model.Product

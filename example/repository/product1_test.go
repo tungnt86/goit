@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"sync"
 	"testing"
 
 	"github.com/tungnt/goit"
@@ -19,16 +20,61 @@ type ProductRepoTestSuite1 struct {
 
 func (s *ProductRepoTestSuite1) TestGetOne_NoError() {
 	db := s.DB()
+	testName := s.T().Name()
 	s.T().Parallel()
-	err := product.NewTennisBallProduct(db, s.FixtureStore()).Build()
+	err := product.NewTennisBallProduct(db, s.FixtureStore()).Build(testName)
 	s.NoError(err)
-	sportCategory, err := s.GetFixture(category.SportCategoryReference)
+	sportCategory, err := s.GetFixture(category.SportCategoryReference, testName)
 	s.NoError(err)
-	berlinWarehouse, err := s.GetFixture(warehouse.BerlinWarehouseReference)
+	berlinWarehouse, err := s.GetFixture(warehouse.BerlinWarehouseReference, testName)
 	s.NoError(err)
 	expectedResult := &model.Product{
 		BaseModel:   model.BaseModel{ID: 1},
 		Name:        "Tennis ball",
+		CategoryID:  sportCategory.GetID(),
+		WarehouseID: berlinWarehouse.GetID(),
+	}
+	repo := &productRepo{db: db}
+	actualResult, err := repo.GetOne(context.Background(), 1)
+	s.NoError(err)
+	s.Equal(expectedResult, actualResult)
+}
+
+func (s *ProductRepoTestSuite1) TestGetOneAgain_NoError() {
+	db := s.DB()
+	testName := s.T().Name()
+	s.T().Parallel()
+	err := product.NewTennisBallProduct(db, s.FixtureStore()).Build(testName)
+	s.NoError(err)
+	sportCategory, err := s.GetFixture(category.SportCategoryReference, testName)
+	s.NoError(err)
+	berlinWarehouse, err := s.GetFixture(warehouse.BerlinWarehouseReference, testName)
+	s.NoError(err)
+	expectedResult := &model.Product{
+		BaseModel:   model.BaseModel{ID: 1},
+		Name:        "Tennis ball",
+		CategoryID:  sportCategory.GetID(),
+		WarehouseID: berlinWarehouse.GetID(),
+	}
+	repo := &productRepo{db: db}
+	actualResult, err := repo.GetOne(context.Background(), 1)
+	s.NoError(err)
+	s.Equal(expectedResult, actualResult)
+}
+
+func (s *ProductRepoTestSuite1) TestGetOneIphone_NoError() {
+	db := s.DB()
+	testName := s.T().Name()
+	s.T().Parallel()
+	err := product.NewIphoneProduct(db, s.FixtureStore()).Build(testName)
+	s.NoError(err)
+	sportCategory, err := s.GetFixture(category.HiTechCategoryReference, testName)
+	s.NoError(err)
+	berlinWarehouse, err := s.GetFixture(warehouse.BerlinWarehouseReference, testName)
+	s.NoError(err)
+	expectedResult := &model.Product{
+		BaseModel:   model.BaseModel{ID: 1},
+		Name:        "Iphone 10",
 		CategoryID:  sportCategory.GetID(),
 		WarehouseID: berlinWarehouse.GetID(),
 	}
@@ -96,15 +142,19 @@ func (s *ProductRepoTestSuite1) TestGetOneInParallel_NoError() {
 		},
 	}
 
+	var wg sync.WaitGroup
 	for id := range tests {
+		wg.Add(1)
 		test := tests[id]
 		s.T().Run(test.name, func(t *testing.T) {
-			//t.Parallel()
+			t.Parallel()
 			repo := &productRepo{db: db}
 			product := test.fixture(test.name, db, s.FixtureStore())
 			actualResult, err := repo.GetOne(context.Background(), product.ID)
 			s.NoError(err)
 			s.Equal(test.want(test.name), actualResult)
+			wg.Done()
 		})
 	}
+	wg.Wait()
 }

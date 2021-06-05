@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	DefaultTestID = "0"
+	DefaultTestID = "default"
 )
 
 var (

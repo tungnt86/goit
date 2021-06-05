@@ -19,10 +19,11 @@ type ProductRepoTestSuite2 struct {
 }
 
 func (s *ProductRepoTestSuite2) TestGetOne_NoError() {
-	db := s.DB()
-	testName := s.T().Name()
 	s.T().Parallel()
-	err := product.NewIphoneProduct(db, s.FixtureStore()).Build(testName)
+	testName := "TestGetOne_NoError"
+	db, err := s.DB(testName)
+	s.NoError(err)
+	err = product.NewIphoneProduct(db, s.FixtureStore()).Build(testName)
 	s.NoError(err)
 	sportCategory, err := s.GetFixture(category.HiTechCategoryReference, testName)
 	s.NoError(err)
@@ -41,8 +42,10 @@ func (s *ProductRepoTestSuite2) TestGetOne_NoError() {
 }
 
 func (s *ProductRepoTestSuite2) TestGetOneInParallel_NoError() {
-	db := s.DB()
 	s.T().Parallel()
+	testName := "TestGetOneInParallel_NoError"
+	db, err := s.DB(testName)
+	s.NoError(err)
 	tests := []struct {
 		name    string
 		fixture func(testID string, db *sql.DB, foxStore fixture.FoxStore) *model.Product

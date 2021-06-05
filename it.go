@@ -24,8 +24,8 @@ type it struct {
 	foxStore    fixture.FoxStore
 }
 
-func (i *it) DB() *sql.DB {
-	return i.connections[i.T().Name()]
+func (i *it) DB(testName string) (*sql.DB, error) {
+	return i.getConnection(testName)
 }
 
 func (i *it) FixtureStore() fixture.FoxStore {
@@ -39,6 +39,13 @@ func (i *it) SetupSuite() {
 	i.foxStore = fixture.NewFixtureStore()
 }
 
+func (i *it) AfterTest(suiteName, testName string) {
+	db, err := i.getConnection(testName)
+	must.NotFail(err)
+	err = db.Close()
+	must.NotFail(err)
+}
+
 func (i *it) initConnectionMapIfNeed() {
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -49,28 +56,27 @@ func (i *it) initConnectionMapIfNeed() {
 	i.connections = make(map[string]*sql.DB)
 }
 
-func (i *it) setConnectionIntoMap(db *sql.DB) error {
+func (i *it) setConnectionIntoMap(testName string, db *sql.DB) error {
 	i.initConnectionMapIfNeed()
-	_, ok := i.connections[i.T().Name()]
+	_, ok := i.connections[testName]
 	if ok {
-		return fmt.Errorf("Connection map key conflicts (%s)", i.T().Name())
+		return fmt.Errorf("Connection map key conflicts (%s)", testName)
 	}
-	i.connections[i.T().Name()] = db
+	i.connections[testName] = db
 	return nil
 }
 
-func (i *it) getConnection() (*sql.DB, error) {
-	db, ok := i.connections[i.T().Name()]
+func (i *it) getConnection(testName string) (*sql.DB, error) {
+	db, ok := i.connections[testName]
 	if !ok {
-		return nil, fmt.Errorf("Connection of test (%s) is not set yet", i.T().Name())
+		return nil, fmt.Errorf(
+			`Connection of test "%s" is not set yet. Is "%s" your test function name?`,
+			testName,
+			testName,
+		)
 	}
 
 	return db, nil
-}
-
-func (i *it) TearDownTest() {
-	err := i.DB().Close()
-	must.NotFail(err)
 }
 
 func (i *it) GetFixture(reference string, testID ...string) (fixture.ModelWithID, error) {

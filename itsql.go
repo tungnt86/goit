@@ -15,15 +15,24 @@ type ITsql struct {
 	transactions map[string]*sql.Tx
 }
 
-func (i *ITsql) SetupTest() {
+func (i *ITsql) BeforeTest(suiteName, testName string) {
 	db, err := database.NewProvider().DB()
 	must.NotFail(err)
 	err = i.cleanUpDB(db)
 	must.NotFail(err)
-	err = i.setConnectionIntoMap(db)
+	err = i.setConnectionIntoMap(testName, db)
 	must.NotFail(err)
-	err = i.initiateTransaction()
+	err = i.initiateTransaction(testName)
 	must.NotFail(err)
+}
+
+func (i *ITsql) AfterTest(suiteName, testName string) {
+	tx, err := i.getTransactionFromMap(testName)
+	must.NotFail(err)
+	err = tx.Rollback()
+	must.NotFail(err)
+	i.deleteTransationFromMap(testName)
+	i.it.AfterTest(suiteName, testName)
 }
 
 func (i *ITsql) cleanUpDB(db *sql.DB) error {
@@ -35,16 +44,16 @@ func (i *ITsql) cleanUpDB(db *sql.DB) error {
 	return database.NewProvider().CleanUpDB(db, string(truncateStmt))
 }
 
-func (i *ITsql) initiateTransaction() error {
-	tx, err := i.startTransaction()
+func (i *ITsql) initiateTransaction(testName string) error {
+	tx, err := i.startTransaction(testName)
 	if err != nil {
 		return err
 	}
-	return i.setTransactionIntoMap(tx)
+	return i.setTransactionIntoMap(testName, tx)
 }
 
-func (i *ITsql) startTransaction() (*sql.Tx, error) {
-	db, err := i.getConnection()
+func (i *ITsql) startTransaction(testName string) (*sql.Tx, error) {
+	db, err := i.getConnection(testName)
 	if err != nil {
 		return nil, err
 	}
@@ -57,13 +66,13 @@ func (i *ITsql) startTransaction() (*sql.Tx, error) {
 	return tx, nil
 }
 
-func (i *ITsql) setTransactionIntoMap(tx *sql.Tx) error {
+func (i *ITsql) setTransactionIntoMap(testName string, tx *sql.Tx) error {
 	i.initTransactionMapIfNeed()
-	_, ok := i.transactions[i.T().Name()]
+	_, ok := i.transactions[testName]
 	if ok {
-		return fmt.Errorf("Transaction map key conflicts (%s)", i.T().Name())
+		return fmt.Errorf("Transaction map key conflicts (%s)", testName)
 	}
-	i.transactions[i.T().Name()] = tx
+	i.transactions[testName] = tx
 	return nil
 }
 
@@ -77,24 +86,19 @@ func (i *ITsql) initTransactionMapIfNeed() {
 	i.transactions = make(map[string]*sql.Tx)
 }
 
-func (i *ITsql) TearDownTest(suiteName, testName string) {
-	tx, err := i.getTransactionFromMap()
-	must.NotFail(err)
-	err = tx.Rollback()
-	must.NotFail(err)
-	i.deleteTransationFromMap()
-	i.it.TearDownTest()
-}
-
-func (i *ITsql) getTransactionFromMap() (*sql.Tx, error) {
-	tx, ok := i.transactions[i.T().Name()]
+func (i *ITsql) getTransactionFromMap(testName string) (*sql.Tx, error) {
+	tx, ok := i.transactions[testName]
 	if !ok {
-		return nil, fmt.Errorf("Transaction of test (%s) is not set yet", i.T().Name())
+		return nil, fmt.Errorf(
+			`Transaction of test "%s" is not set yet. Is "%s" your test function name?`,
+			testName,
+			testName,
+		)
 	}
 
 	return tx, nil
 }
 
-func (i *ITsql) deleteTransationFromMap() {
-	delete(i.transactions, i.T().Name())
+func (i *ITsql) deleteTransationFromMap(testName string) {
+	delete(i.transactions, testName)
 }

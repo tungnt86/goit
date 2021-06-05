@@ -5,13 +5,10 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"io/ioutil"
-	"strings"
 
 	"github.com/tungnt/goit/database"
 	"github.com/tungnt/goit/must"
 )
-
-const testNamePrefix = "TestSuite/"
 
 type ITsqlite struct {
 	it
@@ -20,20 +17,27 @@ type ITsqlite struct {
 
 func (i *ITsqlite) SetupSuite() {
 	i.it.SetupSuite()
-	suiteID, err := i.getRandomString(10)
+	suiteID, err := i.getRandomString(5)
 	must.NotFail(err)
 	i.suiteID = suiteID
 }
 
-func (i *ITsqlite) SetupTest() {
-	db, err := i.initSQLiteDatabase()
+func (i *ITsqlite) BeforeTest(suiteName, testName string) {
+	db, err := i.initSQLiteDatabase(suiteName, testName)
 	must.NotFail(err)
-	err = i.setConnectionIntoMap(db)
+	err = i.setConnectionIntoMap(testName, db)
 	must.NotFail(err)
 }
 
-func (i *ITsqlite) initSQLiteDatabase() (*sql.DB, error) {
-	dbFilePath := i.sqliteDatabaseFilePath()
+func (i *ITsqlite) AfterTest(suiteName, testName string) {
+	i.it.AfterTest(suiteName, testName)
+	dbFilePath := i.sqliteDatabaseFilePath(suiteName, testName)
+	err := database.NewProvider().CleanUpSQLite(dbFilePath)
+	must.NotFail(err)
+}
+
+func (i *ITsqlite) initSQLiteDatabase(suiteName, testName string) (*sql.DB, error) {
+	dbFilePath := i.sqliteDatabaseFilePath(suiteName, testName)
 	initStmt, err := ioutil.ReadFile(i.rootDirectory() + "/" + i.config.SQLiteDatabaseInitFile)
 	if err != nil {
 		return nil, err
@@ -41,18 +45,10 @@ func (i *ITsqlite) initSQLiteDatabase() (*sql.DB, error) {
 	return database.NewProvider().SQLiteDB(dbFilePath, string(initStmt))
 }
 
-func (i *ITsqlite) sqliteDatabaseFilePath() string {
-	testName := strings.Replace(i.T().Name(), testNamePrefix, "", 1)
-	dbFile := i.suiteID + "_" + testName + ".db"
+func (i *ITsqlite) sqliteDatabaseFilePath(suiteName, testName string) string {
+	dbFile := i.suiteID + "_" + suiteName + "_" + testName + ".db"
 	dbPath := i.config.SQLiteDatabasePath + "/" + dbFile
 	return dbPath
-}
-
-func (i *ITsqlite) TearDownTest() {
-	i.it.TearDownTest()
-	dbFilePath := i.sqliteDatabaseFilePath()
-	err := database.NewProvider().CleanUpSQLite(dbFilePath)
-	must.NotFail(err)
 }
 
 func (i *ITsqlite) getRandomString(length int) (string, error) {

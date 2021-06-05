@@ -7,5 +7,6 @@ import (
 )
 
 func TestSuite(t *testing.T) {
-	suite.Run(t, new(ProductRepoTestSuite))
+	suite.Run(t, new(ProductRepoTestSuite1))
+	suite.Run(t, new(ProductRepoTestSuite2))
 }

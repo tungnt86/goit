@@ -16,13 +16,14 @@ type IphoneProduct struct {
 	*fixture.BaseFixture
 }
 
-func NewIphoneProduct(db *sql.DB) *IphoneProduct {
-	hitechCategory := category.NewHiTechCategory(db)
-	berlinWarehouse := warehouse.NewBerlinWarehouse(db)
-	iphoneProduct := &IphoneProduct{BaseFixture: fixture.NewBaseFixture(db)}
+func NewIphoneProduct(db *sql.DB, foxStore fixture.FoxStore) *IphoneProduct {
+	iphoneProduct := &IphoneProduct{BaseFixture: fixture.NewBaseFixture(db, foxStore)}
 	iphoneProduct.SetFoxFixture(iphoneProduct)
 	iphoneProduct.SetReference(IphoneProductReference)
-	iphoneProduct.AddDependencies(hitechCategory, berlinWarehouse)
+	iphoneProduct.AddDependencies(
+		category.NewHiTechCategory(db, foxStore),
+		warehouse.NewBerlinWarehouse(db, foxStore),
+	)
 
 	return iphoneProduct
 }

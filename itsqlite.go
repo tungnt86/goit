@@ -5,59 +5,61 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"io/ioutil"
+	"strings"
 
 	"github.com/tungnt/goit/database"
 	"github.com/tungnt/goit/must"
 )
 
+const testNamePrefix = "TestSuite/"
+
 type ITsqlite struct {
 	it
-	suiteName string
+	suiteID string
 }
 
-func (i *ITsqlite) BeforeTest(suiteName, testName string) {
-	if i.suiteName == "" {
-		i.suiteName = suiteName
-	}
-	db, err := i.initSQLiteDatabase(suiteName, testName)
+func (i *ITsqlite) SetupSuite() {
+	i.it.SetupSuite()
+	suiteID, err := i.getRandomString(10)
+	must.NotFail(err)
+	i.suiteID = suiteID
+}
+
+func (i *ITsqlite) SetupTest() {
+	db, err := i.initSQLiteDatabase()
 	must.NotFail(err)
 	err = i.setConnectionIntoMap(db)
 	must.NotFail(err)
 }
 
-func (i *ITsqlite) initSQLiteDatabase(suiteName, testName string) (*sql.DB, error) {
+func (i *ITsqlite) initSQLiteDatabase() (*sql.DB, error) {
+	dbFilePath := i.sqliteDatabaseFilePath()
 	initStmt, err := ioutil.ReadFile(i.rootDirectory() + "/" + i.config.SQLiteDatabaseInitFile)
 	if err != nil {
 		return nil, err
 	}
-
-	dbSubDir, dbFile, err := i.sqliteDatabasePath(suiteName, testName)
-	if err != nil {
-		return nil, err
-	}
-	return database.NewProvider().SQLiteDB(dbSubDir, dbFile, string(initStmt))
+	return database.NewProvider().SQLiteDB(dbFilePath, string(initStmt))
 }
 
-func (i *ITsqlite) sqliteDatabasePath(suiteName, testName string) (dbSubDir string, dbFile string, err error) {
-	bytes := make([]byte, 5)
-	_, err = rand.Read(bytes)
-	if err != nil {
-		return "", "", err
-	}
-	suffix := base64.URLEncoding.EncodeToString(bytes)
-	dbFile = testName + "_" + suffix + ".db"
-	dbSubDir = i.sqliteDatabaseSubDir(suiteName)
-
-	return dbSubDir, dbFile, nil
+func (i *ITsqlite) sqliteDatabaseFilePath() string {
+	testName := strings.Replace(i.T().Name(), testNamePrefix, "", 1)
+	dbFile := i.suiteID + "_" + testName + ".db"
+	dbPath := i.config.SQLiteDatabasePath + "/" + dbFile
+	return dbPath
 }
 
-func (i *ITsqlite) TearDownSuite() {
-	i.it.TearDownSuite()
-	dbSubDir := i.sqliteDatabaseSubDir(i.suiteName)
-	err := database.NewProvider().CleanUpSQLite(dbSubDir)
+func (i *ITsqlite) TearDownTest() {
+	i.it.TearDownTest()
+	dbFilePath := i.sqliteDatabaseFilePath()
+	err := database.NewProvider().CleanUpSQLite(dbFilePath)
 	must.NotFail(err)
 }
 
-func (i *ITsqlite) sqliteDatabaseSubDir(suiteName string) string {
-	return i.config.SQLiteDatabasePath + "/" + suiteName
+func (i *ITsqlite) getRandomString(length int) (string, error) {
+	bytes := make([]byte, length)
+	_, err := rand.Read(bytes)
+	if err != nil {
+		return "", err
+	}
+	return base64.URLEncoding.EncodeToString(bytes), nil
 }

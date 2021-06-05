@@ -26,11 +26,11 @@ type BaseFixture struct {
 	foxStore     FoxStore
 }
 
-func NewBaseFixture(db *sql.DB) *BaseFixture {
+func NewBaseFixture(db *sql.DB, foxStore FoxStore) *BaseFixture {
 	return &BaseFixture{
-		testID:   DefaultTestID,
 		db:       db,
-		foxStore: NewFixtureStore(),
+		foxStore: foxStore,
+		testID:   DefaultTestID,
 	}
 }
 

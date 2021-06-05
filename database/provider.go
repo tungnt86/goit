@@ -23,7 +23,7 @@ var (
 type Provider interface {
 	DB() (*sql.DB, error)
 	CleanUpDB(db *sql.DB, truncateStmt string) error
-	SQLiteDB(dbSubDir, dbFile string, initStmt string) (*sql.DB, error)
+	SQLiteDB(dbFilePath string, initStmt string) (*sql.DB, error)
 	CleanUpSQLite(dbSubDir string) error
 }
 
@@ -88,14 +88,10 @@ func (p *provider) CleanUpDB(db *sql.DB, truncateStmt string) error {
 SQLite database is a file based database
 Create a new SQLite database file and init tables from a dump file
 */
-func (p *provider) SQLiteDB(dbSubDir, dbFile string, initStmt string) (*sql.DB, error) {
+func (p *provider) SQLiteDB(dbFilePath string, initStmt string) (*sql.DB, error) {
 	mutex.Lock()
 	defer mutex.Unlock()
-	dbFilePath := dbSubDir + "/" + dbFile
 	os.Remove(dbFilePath)
-	if err := p.createDirIfNeed(dbSubDir); err != nil {
-		return nil, err
-	}
 	file, err := os.Create(dbFilePath)
 	if err != nil {
 		return nil, err
@@ -112,16 +108,8 @@ func (p *provider) SQLiteDB(dbSubDir, dbFile string, initStmt string) (*sql.DB, 
 	return db, nil
 }
 
-func (p *provider) createDirIfNeed(dir string) error {
-	if _, err := os.Stat(dir); err != nil && os.IsNotExist(err) {
-		return os.MkdirAll(dir, 0700)
-	}
-
-	return nil
-}
-
-func (p *provider) CleanUpSQLite(dbSubDir string) error {
+func (p *provider) CleanUpSQLite(dbFilePath string) error {
 	mutex.Lock()
 	defer mutex.Unlock()
-	return os.RemoveAll(dbSubDir)
+	return os.Remove(dbFilePath)
 }

@@ -15,7 +15,7 @@ type ITsql struct {
 	transactions map[string]*sql.Tx
 }
 
-func (i *ITsql) BeforeTest(suiteName, testName string) {
+func (i *ITsql) SetupTest() {
 	db, err := database.NewProvider().DB()
 	must.NotFail(err)
 	err = i.cleanUpDB(db)
@@ -77,12 +77,13 @@ func (i *ITsql) initTransactionMapIfNeed() {
 	i.transactions = make(map[string]*sql.Tx)
 }
 
-func (i *ITsql) AfterTest(suiteName, testName string) {
+func (i *ITsql) TearDownTest(suiteName, testName string) {
 	tx, err := i.getTransactionFromMap()
 	must.NotFail(err)
 	err = tx.Rollback()
 	must.NotFail(err)
 	i.deleteTransationFromMap()
+	i.it.TearDownTest()
 }
 
 func (i *ITsql) getTransactionFromMap() (*sql.Tx, error) {

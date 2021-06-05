@@ -14,8 +14,8 @@ type hiTechCategory struct {
 	*fixture.BaseFixture
 }
 
-func NewHiTechCategory(db *sql.DB) *hiTechCategory {
-	categoryFixture := &hiTechCategory{BaseFixture: fixture.NewBaseFixture(db)}
+func NewHiTechCategory(db *sql.DB, foxStore fixture.FoxStore) *hiTechCategory {
+	categoryFixture := &hiTechCategory{BaseFixture: fixture.NewBaseFixture(db, foxStore)}
 	categoryFixture.SetFoxFixture(categoryFixture)
 	categoryFixture.SetReference(HiTechCategoryReference)
 

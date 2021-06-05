@@ -15,12 +15,11 @@ type berlinWarehouse struct {
 	*fixture.BaseFixture
 }
 
-func NewBerlinWarehouse(db *sql.DB) *berlinWarehouse {
-	berlinCity := city.NewBerlinCity(db)
-	warehouseFixture := &berlinWarehouse{BaseFixture: fixture.NewBaseFixture(db)}
+func NewBerlinWarehouse(db *sql.DB, foxStore fixture.FoxStore) *berlinWarehouse {
+	warehouseFixture := &berlinWarehouse{BaseFixture: fixture.NewBaseFixture(db, foxStore)}
 	warehouseFixture.SetFoxFixture(warehouseFixture)
 	warehouseFixture.SetReference(BerlinWarehouseReference)
-	warehouseFixture.AddDependencies(berlinCity)
+	warehouseFixture.AddDependencies(city.NewBerlinCity(db, foxStore))
 
 	return warehouseFixture
 }

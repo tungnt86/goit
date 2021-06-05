@@ -26,47 +26,33 @@ func (i *ITsqlite) SetupSuite() {
 }
 
 func (i *ITsqlite) SetupTest() {
-	i.it.SetupTest()
-	db, err := i.initSQLiteDatabase(i.suiteID, i.T().Name())
+	db, err := i.initSQLiteDatabase()
 	must.NotFail(err)
 	err = i.setConnectionIntoMap(db)
 	must.NotFail(err)
 }
 
-func (i *ITsqlite) initSQLiteDatabase(suiteID, testName string) (*sql.DB, error) {
+func (i *ITsqlite) initSQLiteDatabase() (*sql.DB, error) {
+	dbFilePath := i.sqliteDatabaseFilePath()
 	initStmt, err := ioutil.ReadFile(i.rootDirectory() + "/" + i.config.SQLiteDatabaseInitFile)
 	if err != nil {
 		return nil, err
 	}
-
-	fileName := strings.Replace(testName, testNamePrefix, "", 1)
-	dbSubDir, dbFile, err := i.sqliteDatabasePath(suiteID, fileName)
-	if err != nil {
-		return nil, err
-	}
-	return database.NewProvider().SQLiteDB(dbSubDir, dbFile, string(initStmt))
+	return database.NewProvider().SQLiteDB(dbFilePath, string(initStmt))
 }
 
-func (i *ITsqlite) sqliteDatabasePath(suiteID, testName string) (dbSubDir string, dbFile string, err error) {
-	suffix, err := i.getRandomString(5)
-	if err != nil {
-		return "", "", err
-	}
-	dbFile = testName + "_" + suffix + ".db"
-	dbSubDir = i.sqliteDatabaseSubDir(suiteID)
-
-	return dbSubDir, dbFile, nil
+func (i *ITsqlite) sqliteDatabaseFilePath() string {
+	testName := strings.Replace(i.T().Name(), testNamePrefix, "", 1)
+	dbFile := i.suiteID + "_" + testName + ".db"
+	dbPath := i.config.SQLiteDatabasePath + "/" + dbFile
+	return dbPath
 }
 
-func (i *ITsqlite) TearDownSuite() {
-	i.it.TearDownSuite()
-	dbSubDir := i.sqliteDatabaseSubDir(i.suiteID)
-	err := database.NewProvider().CleanUpSQLite(dbSubDir)
+func (i *ITsqlite) TearDownTest() {
+	i.it.TearDownTest()
+	dbFilePath := i.sqliteDatabaseFilePath()
+	err := database.NewProvider().CleanUpSQLite(dbFilePath)
 	must.NotFail(err)
-}
-
-func (i *ITsqlite) sqliteDatabaseSubDir(suiteID string) string {
-	return i.config.SQLiteDatabasePath + "/" + suiteID
 }
 
 func (i *ITsqlite) getRandomString(length int) (string, error) {

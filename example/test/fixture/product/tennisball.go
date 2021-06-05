@@ -16,13 +16,14 @@ type tennisBallProduct struct {
 	*fixture.BaseFixture
 }
 
-func NewTennisBallProduct(db *sql.DB) *tennisBallProduct {
-	sportCategory := category.NewSportCategory(db)
-	berlinWarehouse := warehouse.NewBerlinWarehouse(db)
-	tennisBallFixture := &tennisBallProduct{BaseFixture: fixture.NewBaseFixture(db)}
+func NewTennisBallProduct(db *sql.DB, foxStore fixture.FoxStore) *tennisBallProduct {
+	tennisBallFixture := &tennisBallProduct{BaseFixture: fixture.NewBaseFixture(db, foxStore)}
 	tennisBallFixture.SetFoxFixture(tennisBallFixture)
 	tennisBallFixture.SetReference(TennisBallProductReference)
-	tennisBallFixture.AddDependencies(sportCategory, berlinWarehouse)
+	tennisBallFixture.AddDependencies(
+		category.NewSportCategory(db, foxStore),
+		warehouse.NewBerlinWarehouse(db, foxStore),
+	)
 
 	return tennisBallFixture
 }

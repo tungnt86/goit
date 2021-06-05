@@ -28,14 +28,15 @@ func (i *it) DB() *sql.DB {
 	return i.connections[i.T().Name()]
 }
 
+func (i *it) FixtureStore() fixture.FoxStore {
+	return i.foxStore
+}
+
 func (i *it) SetupSuite() {
 	cfg, err := newConfig()
 	must.NotFail(err)
 	i.config = cfg
-}
-
-func (i *it) SetupTest() {
-	i.initFixtureStore()
+	i.foxStore = fixture.NewFixtureStore()
 }
 
 func (i *it) initConnectionMapIfNeed() {
@@ -67,20 +68,9 @@ func (i *it) getConnection() (*sql.DB, error) {
 	return db, nil
 }
 
-func (i *it) TearDownSuite() {
-	for _, db := range i.connections {
-		err := db.Close()
-		must.NotFail(err)
-	}
-	i.connections = make(map[string]*sql.DB)
-}
-
 func (i *it) TearDownTest() {
-	i.foxStore.Reset()
-}
-
-func (i *it) initFixtureStore() {
-	i.foxStore = fixture.NewFixtureStore()
+	err := i.DB().Close()
+	must.NotFail(err)
 }
 
 func (i *it) GetFixture(reference string, testID ...string) (fixture.ModelWithID, error) {

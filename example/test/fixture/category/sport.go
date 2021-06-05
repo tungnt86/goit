@@ -14,8 +14,8 @@ type sportCategory struct {
 	*fixture.BaseFixture
 }
 
-func NewSportCategory(db *sql.DB) *sportCategory {
-	categoryFixture := &sportCategory{BaseFixture: fixture.NewBaseFixture(db)}
+func NewSportCategory(db *sql.DB, foxStore fixture.FoxStore) *sportCategory {
+	categoryFixture := &sportCategory{BaseFixture: fixture.NewBaseFixture(db, foxStore)}
 	categoryFixture.SetFoxFixture(categoryFixture)
 	categoryFixture.SetReference(SportCategoryReference)
 

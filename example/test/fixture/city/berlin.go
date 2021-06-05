@@ -14,8 +14,8 @@ type berlinCity struct {
 	*fixture.BaseFixture
 }
 
-func NewBerlinCity(db *sql.DB) *berlinCity {
-	cityFixture := &berlinCity{BaseFixture: fixture.NewBaseFixture(db)}
+func NewBerlinCity(db *sql.DB, foxStore fixture.FoxStore) *berlinCity {
+	cityFixture := &berlinCity{BaseFixture: fixture.NewBaseFixture(db, foxStore)}
 	cityFixture.SetFoxFixture(cityFixture)
 	cityFixture.SetReference(BerlinCityReference)
 

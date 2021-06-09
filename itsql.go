@@ -20,7 +20,7 @@ func (i *ITsql) BeforeTest(suiteName, testName string) {
 	must.NotFail(err)
 	err = i.cleanUpDB(db)
 	must.NotFail(err)
-	err = i.setConnectionIntoMap(testName, db)
+	err = i.setDBIntoMap(testName, db)
 	must.NotFail(err)
 	err = i.initiateTransaction(testName)
 	must.NotFail(err)
@@ -53,7 +53,7 @@ func (i *ITsql) initiateTransaction(testName string) error {
 }
 
 func (i *ITsql) startTransaction(testName string) (*sql.Tx, error) {
-	db, err := i.getConnection(testName)
+	db, err := i.getDB(testName)
 	if err != nil {
 		return nil, err
 	}
@@ -67,16 +67,16 @@ func (i *ITsql) startTransaction(testName string) (*sql.Tx, error) {
 }
 
 func (i *ITsql) setTransactionIntoMap(testName string, tx *sql.Tx) error {
-	i.initTransactionMapIfNeed()
+	i.initTransactionMapIfNeeded()
 	_, ok := i.transactions[testName]
 	if ok {
-		return fmt.Errorf("Transaction map key conflicts (%s)", testName)
+		return fmt.Errorf(`transaction of test "%s" is created already. Is "%s" your test function name?`, testName, testName)
 	}
 	i.transactions[testName] = tx
 	return nil
 }
 
-func (i *ITsql) initTransactionMapIfNeed() {
+func (i *ITsql) initTransactionMapIfNeeded() {
 	mutex.Lock()
 	defer mutex.Unlock()
 	if i.transactions != nil {

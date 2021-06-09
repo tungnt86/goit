@@ -2,6 +2,7 @@ package goit
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"runtime"
@@ -19,58 +20,31 @@ var (
 
 type it struct {
 	suite.Suite
-	config      Config
-	connections map[string]*sql.DB
-	foxStore    fixture.FoxStore
+	config Config
+	dbMap  map[string]*sql.DB
 }
 
-func (i *it) DB(testName string) (*sql.DB, error) {
-	return i.getConnection(testName)
-}
-
-func (i *it) FixtureStore() fixture.FoxStore {
-	return i.foxStore
-}
-
-func (i *it) SetupSuite() {
-	cfg, err := newConfig()
-	must.NotFail(err)
-	i.config = cfg
-	i.foxStore = fixture.NewFixtureStore()
-}
-
-func (i *it) AfterTest(suiteName, testName string) {
-	db, err := i.getConnection(testName)
-	must.NotFail(err)
-	err = db.Close()
-	must.NotFail(err)
-}
-
-func (i *it) initConnectionMapIfNeed() {
-	mutex.Lock()
-	defer mutex.Unlock()
-	if i.connections != nil {
-		return
+func (i *it) GetCurrentTestDB() (*sql.DB, error) {
+	testName, err := i.getCurrentTestFunctionName()
+	if err != nil {
+		return nil, err
 	}
-
-	i.connections = make(map[string]*sql.DB)
+	return i.getDB(testName)
 }
 
-func (i *it) setConnectionIntoMap(testName string, db *sql.DB) error {
-	i.initConnectionMapIfNeed()
-	_, ok := i.connections[testName]
-	if ok {
-		return fmt.Errorf("Connection map key conflicts (%s)", testName)
+func (i *it) getCurrentTestFunctionName() (string, error) {
+	pc, _, _, ok := runtime.Caller(1)
+	if !ok {
+		return "", errors.New("could not get test function name")
 	}
-	i.connections[testName] = db
-	return nil
+	return runtime.FuncForPC(pc).Name(), nil
 }
 
-func (i *it) getConnection(testName string) (*sql.DB, error) {
-	db, ok := i.connections[testName]
+func (i *it) getDB(testName string) (*sql.DB, error) {
+	db, ok := i.dbMap[testName]
 	if !ok {
 		return nil, fmt.Errorf(
-			`Connection of test "%s" is not set yet. Is "%s" your test function name?`,
+			`database of test "%s" is not created yet. Is "%s" your test function name?`,
 			testName,
 			testName,
 		)
@@ -79,12 +53,45 @@ func (i *it) getConnection(testName string) (*sql.DB, error) {
 	return db, nil
 }
 
-func (i *it) GetFixture(reference string, testID ...string) (fixture.ModelWithID, error) {
-	id := fixture.DefaultTestID
-	if len(testID) > 0 {
-		id = testID[0]
+func (i *it) NewFixtureStore() fixture.FoxStore {
+	return fixture.NewFixtureStore()
+}
+
+func (i *it) GetFixture(foxStore fixture.FoxStore, reference string) (fixture.ModelWithID, error) {
+	return foxStore.Get(reference)
+}
+
+func (i *it) SetupSuite() {
+	cfg, err := newConfig()
+	must.NotFail(err)
+	i.config = cfg
+}
+
+func (i *it) AfterTest(suiteName, testName string) {
+	db, err := i.getDB(testName)
+	must.NotFail(err)
+	err = db.Close()
+	must.NotFail(err)
+}
+
+func (i *it) initDBMapIfNeeded() {
+	mutex.Lock()
+	defer mutex.Unlock()
+	if i.dbMap != nil {
+		return
 	}
-	return i.foxStore.Get(id, reference)
+
+	i.dbMap = make(map[string]*sql.DB)
+}
+
+func (i *it) setDBIntoMap(testName string, db *sql.DB) error {
+	i.initDBMapIfNeeded()
+	_, ok := i.dbMap[testName]
+	if ok {
+		return fmt.Errorf(`database of test "%s" is created already. Is "%s" your test function name?`, testName, testName)
+	}
+	i.dbMap[testName] = db
+	return nil
 }
 
 func (i *it) rootDirectory() string {

@@ -3,8 +3,6 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"sync"
-	"testing"
 
 	"github.com/tungnt/goit"
 	"github.com/tungnt/goit/example/model"
@@ -20,14 +18,14 @@ type ProductRepoTestSuite2 struct {
 
 func (s *ProductRepoTestSuite2) TestGetOne_NoError() {
 	s.T().Parallel()
-	testName := "TestGetOne_NoError"
-	db, err := s.DB(testName)
+	db, err := s.GetCurrentTestDB()
 	s.NoError(err)
-	err = product.NewIphoneProduct(db, s.FixtureStore()).Build(testName)
+	foxStore := s.NewFixtureStore()
+	err = product.NewIphoneProduct(db, foxStore).Build()
 	s.NoError(err)
-	sportCategory, err := s.GetFixture(category.HiTechCategoryReference, testName)
+	sportCategory, err := s.GetFixture(foxStore, category.HiTechCategoryReference)
 	s.NoError(err)
-	berlinWarehouse, err := s.GetFixture(warehouse.BerlinWarehouseReference, testName)
+	berlinWarehouse, err := s.GetFixture(foxStore, warehouse.BerlinWarehouseReference)
 	s.NoError(err)
 	expectedResult := &model.Product{
 		BaseModel:   model.BaseModel{ID: 1},
@@ -43,29 +41,26 @@ func (s *ProductRepoTestSuite2) TestGetOne_NoError() {
 
 func (s *ProductRepoTestSuite2) TestGetOneInParallel_NoError() {
 	s.T().Parallel()
-	testName := "TestGetOneInParallel_NoError"
-	db, err := s.DB(testName)
-	s.NoError(err)
 	tests := []struct {
 		name    string
-		fixture func(testID string, db *sql.DB, foxStore fixture.FoxStore) *model.Product
-		want    func(testID string) *model.Product
+		fixture func(db *sql.DB, foxStore fixture.FoxStore) *model.Product
+		want    func(foxStore fixture.FoxStore) *model.Product
 	}{
 		{
 			name: "test get one iphone 10",
-			fixture: func(testID string, db *sql.DB, foxStore fixture.FoxStore) *model.Product {
-				err := product.NewIphoneProduct(db, foxStore).Build(testID)
+			fixture: func(db *sql.DB, foxStore fixture.FoxStore) *model.Product {
+				err := product.NewIphoneProduct(db, foxStore).Build()
 				s.NoError(err)
-				iphoneProduct, err := s.GetFixture(product.IphoneProductReference, testID)
+				iphoneProduct, err := s.GetFixture(foxStore, product.IphoneProductReference)
 				s.NoError(err)
 				return iphoneProduct.(*model.Product)
 			},
-			want: func(testID string) *model.Product {
-				iphoneProduct, err := s.GetFixture(product.IphoneProductReference, testID)
+			want: func(foxStore fixture.FoxStore) *model.Product {
+				iphoneProduct, err := s.GetFixture(foxStore, product.IphoneProductReference)
 				s.NoError(err)
-				hitechCategory, err := s.GetFixture(category.HiTechCategoryReference, testID)
+				hitechCategory, err := s.GetFixture(foxStore, category.HiTechCategoryReference)
 				s.NoError(err)
-				berlinWarehouse, err := s.GetFixture(warehouse.BerlinWarehouseReference, testID)
+				berlinWarehouse, err := s.GetFixture(foxStore, warehouse.BerlinWarehouseReference)
 				s.NoError(err)
 				return &model.Product{
 					BaseModel:   model.BaseModel{ID: iphoneProduct.GetID()},
@@ -77,19 +72,19 @@ func (s *ProductRepoTestSuite2) TestGetOneInParallel_NoError() {
 		},
 		{
 			name: "test get one tennis ball",
-			fixture: func(testID string, db *sql.DB, foxStore fixture.FoxStore) *model.Product {
-				err := product.NewTennisBallProduct(db, foxStore).Build(testID)
+			fixture: func(db *sql.DB, foxStore fixture.FoxStore) *model.Product {
+				err := product.NewTennisBallProduct(db, foxStore).Build()
 				s.NoError(err)
-				product, err := s.GetFixture(product.TennisBallProductReference, testID)
+				product, err := s.GetFixture(foxStore, product.TennisBallProductReference)
 				s.NoError(err)
 				return product.(*model.Product)
 			},
-			want: func(testID string) *model.Product {
-				tennisProduct, err := s.GetFixture(product.TennisBallProductReference, testID)
+			want: func(foxStore fixture.FoxStore) *model.Product {
+				tennisProduct, err := s.GetFixture(foxStore, product.TennisBallProductReference)
 				s.NoError(err)
-				sportCategory, err := s.GetFixture(category.SportCategoryReference, testID)
+				sportCategory, err := s.GetFixture(foxStore, category.SportCategoryReference)
 				s.NoError(err)
-				berlinWarehouse, err := s.GetFixture(warehouse.BerlinWarehouseReference, testID)
+				berlinWarehouse, err := s.GetFixture(foxStore, warehouse.BerlinWarehouseReference)
 				s.NoError(err)
 				return &model.Product{
 					BaseModel:   model.BaseModel{ID: tennisProduct.GetID()},
@@ -101,19 +96,14 @@ func (s *ProductRepoTestSuite2) TestGetOneInParallel_NoError() {
 		},
 	}
 
-	var wg sync.WaitGroup
-	for id := range tests {
-		wg.Add(1)
-		test := tests[id]
-		s.T().Run(test.name, func(t *testing.T) {
-			t.Parallel()
-			repo := &productRepo{db: db}
-			product := test.fixture(test.name, db, s.FixtureStore())
-			actualResult, err := repo.GetOne(context.Background(), product.ID)
-			s.NoError(err)
-			s.Equal(test.want(test.name), actualResult)
-			wg.Done()
-		})
+	db, err := s.GetCurrentTestDB()
+	s.NoError(err)
+	for _, test := range tests {
+		foxStore := s.NewFixtureStore()
+		repo := &productRepo{db: db}
+		product := test.fixture(db, foxStore)
+		actualResult, err := repo.GetOne(context.Background(), product.ID)
+		s.NoError(err)
+		s.Equal(test.want(foxStore), actualResult)
 	}
-	wg.Wait()
 }

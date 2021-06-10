@@ -14,23 +14,21 @@ type FoxFixture interface {
 
 type FoxBuilder interface {
 	AddDependencies(dependencies ...FoxBuilder)
-	Build(testID ...string) error
+	Build() error
 }
 
 type BaseFixture struct {
 	FoxFixture
-	testID       string
 	db           *sql.DB
+	foxStore     FoxStore
 	reference    string
 	dependencies []FoxBuilder
-	foxStore     FoxStore
 }
 
 func NewBaseFixture(db *sql.DB, foxStore FoxStore) *BaseFixture {
 	return &BaseFixture{
 		db:       db,
 		foxStore: foxStore,
-		testID:   DefaultTestID,
 	}
 }
 
@@ -43,7 +41,7 @@ func (b *BaseFixture) DB() *sql.DB {
 }
 
 func (b *BaseFixture) Reference() (string, error) {
-	if "" == b.reference {
+	if b.reference == "" {
 		return "", errors.New("reference of this fixture is not defined yet")
 	}
 
@@ -60,7 +58,7 @@ func (b *BaseFixture) AddDependencies(dependencies ...FoxBuilder) {
 
 func (b *BaseFixture) BuildDependencies() error {
 	for _, dependency := range b.dependencies {
-		err := dependency.Build(b.testID)
+		err := dependency.Build()
 		if nil != err {
 			return err
 		}
@@ -69,10 +67,7 @@ func (b *BaseFixture) BuildDependencies() error {
 	return nil
 }
 
-func (b *BaseFixture) Build(testID ...string) error {
-	if len(testID) > 0 {
-		b.testID = testID[0]
-	}
+func (b *BaseFixture) Build() error {
 	_, err := b.GetFixture(b.reference)
 	if err == nil {
 		return nil
@@ -86,11 +81,11 @@ func (b *BaseFixture) Build(testID ...string) error {
 		return err
 	}
 
-	return b.foxStore.Set(b.testID, b.reference, fixture)
+	return b.foxStore.Set(b.reference, fixture)
 }
 
 func (b *BaseFixture) GetFixture(reference string) (ModelWithID, error) {
-	fixture, err := b.foxStore.Get(b.testID, reference)
+	fixture, err := b.foxStore.Get(reference)
 	if err != nil {
 		return nil, err
 	}

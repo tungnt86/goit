@@ -25,7 +25,7 @@ func (i *ITsqlite) SetupSuite() {
 func (i *ITsqlite) BeforeTest(suiteName, testName string) {
 	db, err := i.initSQLiteDatabase(suiteName, testName)
 	must.NotFail(err)
-	err = i.setConnectionIntoMap(testName, db)
+	err = i.setDBIntoMap(testName, db)
 	must.NotFail(err)
 }
 

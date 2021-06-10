@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"sync"
 
 	"github.com/stretchr/testify/suite"
@@ -33,11 +34,13 @@ func (i *it) GetCurrentTestDB() (*sql.DB, error) {
 }
 
 func (i *it) getCurrentTestFunctionName() (string, error) {
-	pc, _, _, ok := runtime.Caller(1)
+	pc, _, _, ok := runtime.Caller(2)
 	if !ok {
 		return "", errors.New("could not get test function name")
 	}
-	return runtime.FuncForPC(pc).Name(), nil
+	testFunction := runtime.FuncForPC(pc).Name()
+	lastPoint := strings.LastIndex(testFunction, ".")
+	return testFunction[lastPoint+1:], nil
 }
 
 func (i *it) getDB(testName string) (*sql.DB, error) {

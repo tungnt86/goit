@@ -3,8 +3,6 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"sync"
-	"testing"
 
 	"github.com/tungnt/goit"
 	"github.com/tungnt/goit/example/model"
@@ -100,20 +98,12 @@ func (s *ProductRepoTestSuite2) TestGetOneInParallel_NoError() {
 
 	db, err := s.GetCurrentTestDB()
 	s.NoError(err)
-	var wg sync.WaitGroup
-	for id := range tests {
-		wg.Add(1)
-		test := tests[id]
-		s.T().Run(test.name, func(t *testing.T) {
-			t.Parallel()
-			foxStore := s.NewFixtureStore()
-			repo := &productRepo{db: db}
-			product := test.fixture(db, foxStore)
-			actualResult, err := repo.GetOne(context.Background(), product.ID)
-			s.NoError(err)
-			s.Equal(test.want(foxStore), actualResult)
-			wg.Done()
-		})
+	for _, test := range tests {
+		foxStore := s.NewFixtureStore()
+		repo := &productRepo{db: db}
+		product := test.fixture(db, foxStore)
+		actualResult, err := repo.GetOne(context.Background(), product.ID)
+		s.NoError(err)
+		s.Equal(test.want(foxStore), actualResult)
 	}
-	wg.Wait()
 }

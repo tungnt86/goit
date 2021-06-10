@@ -147,9 +147,9 @@ func (s *ProductRepoTestSuite1) TestGetOneInParallel_NoError() {
 	db, err := s.GetCurrentTestDB()
 	s.NoError(err)
 	var wg sync.WaitGroup
-	for id := range tests {
+	for _, test := range tests {
 		wg.Add(1)
-		test := tests[id]
+		test := test
 		s.T().Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			foxStore := s.NewFixtureStore()
